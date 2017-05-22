@@ -144,7 +144,7 @@ CModifier.new = function(hyperInstance)
         return self
     end
 
-    _self.fragsForKey = function(self, key)
+    _self.flagsForKey = function(self, key)
         if self._anyTarget then
             return self._modFlags
         end
@@ -383,7 +383,7 @@ CHyper.new = function(triggerKey)
 
         -- modifier
         for i, v in ipairs(self._modifiers) do
-            local flag = v:fragsForKey(keyCode)
+            local flag = v:flagsForKey(keyCode)
             if flag ~= nil then
                 e:setFlags(flag)
                 if isFirstKeyDown then
