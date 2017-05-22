@@ -1,6 +1,7 @@
 
 --  hyperex.lua
---  version: 0.1
+
+local HYPEREX_VERSION = '0.1'
 
 local log=hs.logger.new('hyperex', 'debug')
 
@@ -209,6 +210,10 @@ CBinder.new = function(hyperInstance)
 end
 
 local CHyper = {}
+
+CHyper.version = function()
+    return HYPEREX_VERSION
+end
 
 CHyper.new = function(triggerKey)
     local _self = {
