@@ -292,32 +292,7 @@ local CHyperImpl = {
         return m
     end,
 
-}
-
-CHyper.new = function(triggerKey)
-    local _self = {
-        message = nil,
-        leaveMessage = nil,
-        alertDuration = 0.4,
-
-        _triggered = false,
-        _binders = {},
-        _modifiers = {},
-        _emptyHitFunc = nil,
-        _initialHitFunc = nil,
-
-        _triggerKey = nil,
-        _triggerMod = {}, -- unused now
-        _trigger = nil,
-
-        _tap = nil
-    }
-
-    setmetatable(_self, {__index = CHyperImpl})
-    -- self 取れない function はここで定義
-
-    _self.enter = function()
-        local self = _self
+    enter = function(self)
         if self._tap:isEnabled() then
             log.d('try to re-enter')
             return
@@ -330,10 +305,9 @@ CHyper.new = function(triggerKey)
             self._initialHitFunc()
         end
         self._triggered = false
-    end
+    end,
 
-    _self.exit = function()
-        local self = _self
+    exit = function(self)
         if not self._tap:isEnabled() then
             log.d('try to re-exit')
             return
@@ -346,10 +320,9 @@ CHyper.new = function(triggerKey)
         if (not self._triggered) and self._emptyHitFunc then
             self._emptyHitFunc()
         end
-    end
+    end,
 
-    _self._handleTap = function(e)
-        local self = _self
+    handleTap = function(self, e)
         local keyCode = e:getKeyCode()
         -- キーボードからの直接入力だけを扱う
         local stateID = e:getProperty(hs.eventtap.event.properties['eventSourceStateID'])
@@ -412,12 +385,38 @@ CHyper.new = function(triggerKey)
         end
 
         return false
-    end
+    end,
+
+}
+
+CHyper.new = function(triggerKey)
+    local _self = {
+        message = nil,
+        leaveMessage = nil,
+        alertDuration = 0.4,
+
+        _triggered = false,
+        _binders = {},
+        _modifiers = {},
+        _emptyHitFunc = nil,
+        _initialHitFunc = nil,
+
+        _triggerKey = nil,
+        _triggerMod = {}, -- unused now
+        _trigger = nil,
+
+        _tap = nil
+    }
+
+    setmetatable(_self, {__index = CHyperImpl})
 
     _self._triggerMod, _self._triggerKey = parseKey(triggerKey)
     if _self._triggerKey ~= nil then
-        _self._trigger = hs.hotkey.bind( _self._triggerMod, _self._triggerKey, 0, _self.enter, _self.exit, nil )
-        _self._tap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp}, _self._handleTap)
+        local hotkeyDown = function() _self:enter() end
+        local hotkeyUp = function() _self:exit() end
+        local handleTap = function(e) _self:handleTap(e) end
+        _self._trigger = hs.hotkey.bind(_self._triggerMod, _self._triggerKey, 0, hotkeyDown, hotkeyUp, nil)
+        _self._tap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp}, handleTap)
     end
 
     return _self
