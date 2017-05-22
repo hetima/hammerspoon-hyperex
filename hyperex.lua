@@ -3,7 +3,7 @@
 
 local HYPEREX_VERSION = '0.1'
 
-local log=hs.logger.new('hyperex', 'debug')
+local log = hs.logger.new('hyperex', 'debug')
 
 -- 比較の手間を省くためにあらかじめ数値にしておく
 local function realKeyCode(v)
@@ -20,7 +20,7 @@ end
 -- ({'mod','mod'}, key) (key, {'mod','mod'}) -> 順不同で OK
 -- ('key', nil)  -> modifiers は {}
 -- ('mod+mod+key') -> オリジナル
-local parseKey = function(a1, a2)
+local function parseKey(a1, a2)
     local parseSingle = function(a)
         if type(a) == 'number' then return {}, a end
         if type(a) == 'string' then
@@ -80,38 +80,31 @@ local function modifiersToFlags(modifiers)
 end
 
 local CModifier = {}
-CModifier.new = function(hyperInstance)
-    local _self = {
-        _modFlags = {},
-        _targetKeys = {},
-        _anyTarget = false,
-        message = nil,
-        alertDuration = 0.4,
-    }
+local CModifierStruct = {
 
-   _self.mod = function(self, modifiers)
+    mod = function(self, modifiers)
         if type(modifiers) == 'string' then
             modifiers = {modifiers}
         end
         self._modFlags = modifiersToFlags(modifiers)
         return self
-    end
+    end,
 
-    _self.withMessage = function(self, m, t)
+    withMessage = function(self, m, t)
         self.message = m
         if type(t) == 'number' then
             self.alertDuration = t
         end
         return self
-    end
+    end,
 
-    _self.showMessage = function(self)
+    showMessage = function(self)
         if type(self.message) == 'string' then 
             hs.alert(self.message, self.alertDuration or 0)
         end
-    end
+    end,
 
-    _self.to = function(self, keys)
+    to = function(self, keys)
         if type(keys) == 'string' then
             if keys == 'any' or keys == 'all' then
                 self._anyTarget = true
@@ -143,9 +136,9 @@ CModifier.new = function(hyperInstance)
         end
         self._targetKeys = keyNumbers
         return self
-    end
+    end,
 
-    _self.flagsForKey = function(self, key)
+    flagsForKey = function(self, key)
         if self._anyTarget then
             return self._modFlags
         end
@@ -155,43 +148,45 @@ CModifier.new = function(hyperInstance)
             end
         end
         return nil
-    end
+    end,
 
-    return _self
-end
+}
 
-local CBinder = {}
-CBinder.new = function(hyperInstance)
+CModifier.new = function(hyperInstance)
     local _self = {
-        fromKey = nil,
-        fromMod = {},
-        toKey = nil,
-        toFlags = {},
-        toFunc = nil,
+        _modFlags = {},
+        _targetKeys = {},
+        _anyTarget = false,
         message = nil,
         alertDuration = 0.4,
     }
 
-    _self.withMessage = function(self, m, t)
+    setmetatable(_self, {__index = CModifierStruct})
+    return _self
+end
+
+local CBinder = {}
+local CBinderStruct = {
+    withMessage = function(self, m, t)
         self.message = m
         if type(t) == 'number' then
             self.alertDuration = t
         end
         return self
-    end
+    end,
 
-    _self.showMessage = function(self)
+    showMessage = function(self)
         if type(self.message) == 'string' then 
             hs.alert(self.message, self.alertDuration or 0)
         end
-    end
+    end,
 
-    _self.bind = function(self, fromKey, fromMod)
+    bind = function(self, fromKey, fromMod)
         self.fromMod, self.fromKey = parseKey(fromKey, fromMod)
         return self
-    end
+    end,
 
-    _self.to = function(self, a1, a2)
+    to = function(self, a1, a2)
         if type(a1) == 'function' then
             self.toFunc = a1
             self.toKey = nil
@@ -204,16 +199,100 @@ CBinder.new = function(hyperInstance)
             self.toFunc = nil
         end
         return self
-    end
+    end,
+
+}
+
+CBinder.new = function(hyperInstance)
+    local _self = {
+        fromKey = nil,
+        fromMod = {},
+        toKey = nil,
+        toFlags = {},
+        toFunc = nil,
+        message = nil,
+        alertDuration = 0.4,
+    }
+
+    setmetatable(_self, {__index = CBinderStruct})
 
     return _self
 end
 
 local CHyper = {}
-
 CHyper.version = function()
     return HYPEREX_VERSION
 end
+
+local CHyperStruct = {
+    withMessage = function(self, m, t, z)
+        if type(m) == 'string' and #m > 0 then
+            self.message = m
+        end
+        if type(t) == 'number' then
+            self.alertDuration = t
+        elseif type(t) == 'string' and #t > 0 then
+            self.leaveMessage = t
+            if type(z) == 'number' then
+                self.alertDuration = z
+            end
+        end
+        return self
+    end,
+
+    setInitialFunc = function(self, func)
+        if (type(func) == 'function') then
+            self._initialHitFunc = func
+        end
+        return self
+    end,
+
+    setInitialKey = function(self, key, modifiers)
+        modifiers, key = parseKey(key, modifiers)
+        if key == self._triggerKey then
+            return self
+        end
+        self._initialHitFunc = function()
+            hs.eventtap.event.newKeyEvent(modifiers, key, true):post()
+            hs.timer.usleep(600)
+            hs.eventtap.event.newKeyEvent(modifiers, key, false):post()
+        end
+        return self
+    end,
+
+    setEmptyHitFunc = function(self, func)
+        if type(func) == 'function' then
+            self._emptyHitFunc = func
+        end
+        return self
+    end,
+
+    setEmptyHitKey = function(self, key, modifiers)
+        modifiers, key = parseKey(key, modifiers)
+        if key == self._triggerKey then
+            return self
+        end
+        self._emptyHitFunc = function()
+            hs.eventtap.event.newKeyEvent(modifiers, key, true):post()
+            hs.timer.usleep(600)
+            hs.eventtap.event.newKeyEvent(modifiers, key, false):post()
+        end
+        return self
+    end,
+
+    bind = function(self, fromKey, fromMod)
+        local b = CBinder.new(self):bind(fromKey, fromMod)
+        table.insert(self._binders, 1, b)
+        return b
+    end,
+
+    mod = function(self, modifiers)
+        local m = CModifier.new(self):mod(modifiers)
+        table.insert(self._modifiers, 1, m)
+        return m
+    end,
+
+}
 
 CHyper.new = function(triggerKey)
     local _self = {
@@ -231,67 +310,14 @@ CHyper.new = function(triggerKey)
         _triggerMod = {}, -- unused now
         _trigger = nil,
 
-        _tap = nil,
-        _nop = function() end
+        _tap = nil
     }
 
-    _self.withMessage = function(self, m, t, z)
-        if type(m) == 'string' and #m > 0 then
-            self.message = m
-        end
-        if type(t) == 'number' then
-            self.alertDuration = t
-        elseif type(t) == 'string' and #t > 0 then
-            self.leaveMessage = t
-            if type(z) == 'number' then
-                self.alertDuration = z
-            end
-        end
-        return self
-    end
+    setmetatable(_self, {__index = CHyperStruct})
+    -- self 取れない function はここで定義
 
-    _self.setInitialFunc = function(self, func)
-        if (type(func) == 'function') then
-            self._initialHitFunc = func
-        end
-        return self
-    end
-
-    _self.setInitialKey = function(self, key, modifiers)
-        modifiers, key = parseKey(key, modifiers)
-        if key == self._triggerKey then
-            return self
-        end
-        self._initialHitFunc = function()
-            hs.eventtap.event.newKeyEvent(modifiers, key, true):post()
-            hs.timer.usleep(600)
-            hs.eventtap.event.newKeyEvent(modifiers, key, false):post()
-        end
-        return self
-    end
-
-    _self.setEmptyHitFunc = function(self, func)
-        if type(func) == 'function' then
-            self._emptyHitFunc = func
-        end
-        return self
-    end
-
-    _self.setEmptyHitKey = function(self, key, modifiers)
-        modifiers, key = parseKey(key, modifiers)
-        if key == self._triggerKey then
-            return self
-        end
-        self._emptyHitFunc = function()
-            hs.eventtap.event.newKeyEvent(modifiers, key, true):post()
-            hs.timer.usleep(600)
-            hs.eventtap.event.newKeyEvent(modifiers, key, false):post()
-        end
-        return self
-    end
-
-    _self.enter = function(self)
-        self = self or _self
+    _self.enter = function()
+        local self = _self
         if self._tap:isEnabled() then
             log.d('try to re-enter')
             return
@@ -306,8 +332,8 @@ CHyper.new = function(triggerKey)
         self._triggered = false
     end
 
-    _self.exit = function(self)
-        self = self or _self
+    _self.exit = function()
+        local self = _self
         if not self._tap:isEnabled() then
             log.d('try to re-exit')
             return
@@ -322,20 +348,7 @@ CHyper.new = function(triggerKey)
         end
     end
 
-    _self.bind = function(self, fromKey, fromMod)
-        local b = CBinder.new(self):bind(fromKey, fromMod)
-        table.insert(self._binders, 1, b)
-        return b
-    end
-
-    _self.mod = function (self, modifiers)
-        local m = CModifier.new(self):mod(modifiers)
-        table.insert(self._modifiers, 1, m)
-        return m
-    end
-
-
-    _self._handleTap = function (e)
+    _self._handleTap = function(e)
         local self = _self
         local keyCode = e:getKeyCode()
         -- キーボードからの直接入力だけを扱う
