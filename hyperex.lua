@@ -80,7 +80,7 @@ local function modifiersToFlags(modifiers)
 end
 
 local CModifier = {}
-local CModifierStruct = {
+local CModifierImpl = {
 
     mod = function(self, modifiers)
         if type(modifiers) == 'string' then
@@ -161,12 +161,12 @@ CModifier.new = function(hyperInstance)
         alertDuration = 0.4,
     }
 
-    setmetatable(_self, {__index = CModifierStruct})
+    setmetatable(_self, {__index = CModifierImpl})
     return _self
 end
 
 local CBinder = {}
-local CBinderStruct = {
+local CBinderImpl = {
     withMessage = function(self, m, t)
         self.message = m
         if type(t) == 'number' then
@@ -214,7 +214,7 @@ CBinder.new = function(hyperInstance)
         alertDuration = 0.4,
     }
 
-    setmetatable(_self, {__index = CBinderStruct})
+    setmetatable(_self, {__index = CBinderImpl})
 
     return _self
 end
@@ -224,7 +224,7 @@ CHyper.version = function()
     return HYPEREX_VERSION
 end
 
-local CHyperStruct = {
+local CHyperImpl = {
     withMessage = function(self, m, t, z)
         if type(m) == 'string' and #m > 0 then
             self.message = m
@@ -313,7 +313,7 @@ CHyper.new = function(triggerKey)
         _tap = nil
     }
 
-    setmetatable(_self, {__index = CHyperStruct})
+    setmetatable(_self, {__index = CHyperImpl})
     -- self 取れない function はここで定義
 
     _self.enter = function()
