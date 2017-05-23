@@ -40,12 +40,10 @@ hx:bind('z'):to(function() hs.eventtap.keyStroke({}, 'h') end)
 
 This setting modify only modifier keys.
 
-```
--- syntax
-hyperex:mod({mods, ...}):to({key, otherKey, ...})
-```
-
 ```lua
+-- syntax
+-- hyperex:mod({mods, ...}):to({key, otherKey, ...})
+
 --  hyper + 3 or 4 -> cmd + shift + 3 or 4
 hx:mod({'cmd', 'shift'}):to('3','4')
 
