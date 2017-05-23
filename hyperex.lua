@@ -89,6 +89,17 @@ local function modifiersToFlags(modifiers)
     return flags
 end
 
+local function mergeFlags(t1, t2)
+    local flags = {}
+    for i, v in pairs(t1) do
+        flags[i] = t1[i]
+    end
+    for i, v in pairs(t2) do
+        flags[i] = t2[i]
+    end
+    return flags
+end
+
 local CModifier = {}
 local CModifierImpl = {
 
@@ -370,7 +381,7 @@ local CHyperImpl = {
         for i, v in ipairs(self._modifiers) do
             local flag = v:flagsForKey(keyCode)
             if flag ~= nil then
-                e:setFlags(flag)
+                e:setFlags(mergeFlags(flag, e:getFlags()))
                 if type == KEY_DOWN then
                     self._triggered = true
                     v:showMessage()
