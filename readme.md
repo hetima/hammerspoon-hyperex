@@ -92,7 +92,7 @@ Pressing the `esc` key ends mode immediately regardless of variant.
 local hx = hyperex.new('f18')
 hx:sticky('once')
 hx:sticky('toggle')
-hx:sticky('chain', 0.4) -- pass effective duration as secs
+hx:sticky('chain', 0.4) -- pass effective duration as secs
 ```
 
 ## Other
