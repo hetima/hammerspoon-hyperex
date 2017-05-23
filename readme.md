@@ -4,7 +4,13 @@
 hyperex is [Hammerspoon](http://www.hammerspoon.org/) script which provides yet another modifier key. With simplicity, adaptability, diversity.
 
 ## Release Note
-0.2 - added [Sticky mode](#sticky-mode)
+
+### 0.2.1
+ - [Setting priority was reversed](https://github.com/hetima/hammerspoon-hyperex/commit/3d9963d40d5dc51e7061eea8788d0b424d5fe5c9). Early settings takes precedence. You may need to repair init.lua.   
+- added idiom `'num'` and `'pads'` for `mod():to()`
+
+### 0.2
+- added [Sticky mode](#sticky-mode)
 
 ## Install
 

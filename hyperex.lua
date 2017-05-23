@@ -1,7 +1,7 @@
 
 --  hyperex.lua
 
-local HYPEREX_VERSION = '0.2'
+local HYPEREX_VERSION = '0.2.1'
 
 local log = hs.logger.new('hyperex', 'debug')
 
