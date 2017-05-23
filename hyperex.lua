@@ -306,13 +306,13 @@ local CHyperImpl = {
 
     bind = function(self, fromKey, fromMod)
         local b = CBinder.new(self):bind(fromKey, fromMod)
-        table.insert(self._binders, 1, b)
+        table.insert(self._binders, b)
         return b
     end,
 
     mod = function(self, modifiers)
         local m = CModifier.new(self):mod(modifiers)
-        table.insert(self._modifiers, 1, m)
+        table.insert(self._modifiers, m)
         return m
     end,
 

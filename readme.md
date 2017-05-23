@@ -117,13 +117,13 @@ hx:setEmptyHitKey('f18') -- disabled
 hx:bind('f1'):to('f18') -- enabled but confuse
 ```
 
-Give priority to later settings. `bind` takes precedence over `mod` all the time.
+Give priority to early settings. `bind` takes precedence over `mod` all the time.
 ```lua
 local hx = hyperex.new('f18')
-hx:mod({'alt'}):to('f2','f3') -- only f3 is enabled
-hx:bind('f1'):to(...) -- disabled
-hx:bind('f1'):to(...) -- enabled
 hx:mod({'ctrl', 'shift'}):to('f1','f2') -- only f2 is enabled 
+hx:bind('f1'):to(...) -- enabled
+hx:bind('f1'):to(...) -- disabled
+hx:mod({'alt'}):to('f2','f3') -- only f3 is enabled
 ```
 
 hyperex handles only real keyboard input.
