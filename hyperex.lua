@@ -452,6 +452,9 @@ local CHyperStickyImpl = {
 
     exitSticky = function(self)
         -- log.d("Sticky exit")
+        if  self.chainTimer then
+            self.chainTimer:stop()
+        end
         CHyperImpl.exit(self)
         self._stickyModal:exit()
     end,
@@ -462,14 +465,9 @@ local CHyperStickyImpl = {
 
     chain = function(self)
         if self.chainTimer == nil then
-            self.chainTimer = hs.timer.delayed.new(self.chainDelay, function() self:fireChainTimer() end)
+            self.chainTimer = hs.timer.delayed.new(self.chainDelay, function() self:exitSticky() end)
         end
         self.chainTimer:start()
-    end,
-
-    fireChainTimer = function(self)
-        self.chainTimer:stop()
-        self:exitSticky()
     end,
 
     handleTap = function(self, e, keyCode, type)
