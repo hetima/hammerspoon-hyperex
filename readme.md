@@ -4,7 +4,7 @@
 hyperex is Hammerspoon script which provides yet another modifier key. With simplicity, adaptability, diversity.
 
 ## Release Note
-0.2 - added Sticky mode
+0.2 - added [Sticky mode](#sticky-mode)
 
 ## Install
 
