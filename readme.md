@@ -3,6 +3,9 @@
 
 hyperex is Hammerspoon script which provides yet another modifier key. With simplicity, adaptability, diversity.
 
+## Release Note
+0.2 - added Sticky mode
+
 ## Install
 
 Place `hyperex.lua` into `~/.hammerspoon/`
@@ -75,6 +78,23 @@ local hx = hyperex.new(0x50):withMessage("hello", "bye", 0.5)
 hx:bind('a'):to('a', {}):withMessage("a was pressed", 0.1)
 ```
 
+## Sticky mode
+
+Sticky mode has three variants.
+
+- `'once'` : It ends soon after any one stroke.
+- `'toggle'` : Enabled until you press the hyper-key again.
+- `'chain'` : Enabled while strokes continue at short intervals
+
+Pressing the `esc` key ends mode immediately regardless of variant.
+
+```lua
+local hx = hyperex.new('f18')
+hx:sticky('once')
+hx:sticky('toggle')
+hx:sticky('chain', 0.4) -- pass effective duration as secs
+```
+
 ## Other
 
 hyperex can be used multiple instances.
@@ -116,6 +136,7 @@ Method chain
 |CHyper   |.new()|CHyper|
 |CHyper   |:setInitialKey()|self|
 |CHyper   |:setEmptyHitKey()|self|
+|CHyper   |:sticky()|self|
 |CHyper   |:bind()|CBinder|
 |CHyper   |:mod()|CModifier|
 |CBinder  |:to()|self|
