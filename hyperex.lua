@@ -5,6 +5,16 @@ local HYPEREX_VERSION = '0.1'
 
 local log = hs.logger.new('hyperex', 'debug')
 
+local KEY_DOWN = 1
+local KEY_REPEAT = 2
+local KEY_UP = 3
+
+CHyper = {}
+
+CHyper.version = function()
+    return HYPEREX_VERSION
+end
+
 -- 比較の手間を省くためにあらかじめ数値にしておく
 local function realKeyCode(v)
     if type(v) == 'string' then
@@ -219,10 +229,7 @@ CBinder.new = function(hyperInstance)
     return _self
 end
 
-local CHyper = {}
-CHyper.version = function()
-    return HYPEREX_VERSION
-end
+
 
 local CHyperImpl = {
     withMessage = function(self, m, t, z)
@@ -322,29 +329,16 @@ local CHyperImpl = {
         end
     end,
 
-    handleTap = function(self, e)
-        local keyCode = e:getKeyCode()
-        -- キーボードからの直接入力だけを扱う
-        local stateID = e:getProperty(hs.eventtap.event.properties['eventSourceStateID'])
-        if stateID ~= 1 then
-            return false
-        end
+    handleTap = function(self, e, keyCode, type)
 
-        local isFirstKeyDown = false
-        if e:getType() == hs.eventtap.event.types.keyDown then
-            -- ややこしいことになるので triggerKey と同じものは無視
-            -- hotkey 最初の keyDown は来ないが、押下中の keyRepeat は来る
-            -- true/false どちらを返しても同じみたいだけど一応 true を返しておく
-            if keyCode == self._triggerKey then
-                return true
-            end
-            if e:getProperty(hs.eventtap.event.properties['keyboardEventAutorepeat']) == 0 then
-                isFirstKeyDown = true
-            end
-        else
+        -- ややこしいことになるので triggerKey と同じものは無視
+        -- hotkey 最初の keyDown は来ないが、押下中の keyRepeat は来る
+        if keyCode == self._triggerKey then
             -- triggerKey の keyUp は確実に逃がさないとモードを抜け出せない
-            if keyCode == self._triggerKey then
+            if type == KEY_UP then
                 return false
+            else
+                return true
             end
         end
 
@@ -355,14 +349,14 @@ local CHyperImpl = {
                 if v.toKey ~= nil then
                     e:setKeyCode(v.toKey)
                     e:setFlags(v.toFlags)
-                    if isFirstKeyDown then
+                    if type == KEY_DOWN then
                         self._triggered = true
                         v:showMessage()
                     end
                     return false
                 -- func 型
                 elseif v.toFunc ~= nil then
-                    if isFirstKeyDown then
+                    if type == KEY_DOWN then
                         self._triggered = true
                         v:showMessage()
                         v.toFunc()
@@ -377,7 +371,7 @@ local CHyperImpl = {
             local flag = v:flagsForKey(keyCode)
             if flag ~= nil then
                 e:setFlags(flag)
-                if isFirstKeyDown then
+                if type == KEY_DOWN then
                     self._triggered = true
                 end
                 return false
@@ -414,12 +408,105 @@ CHyper.new = function(triggerKey)
     if _self._triggerKey ~= nil then
         local hotkeyDown = function() _self:enter() end
         local hotkeyUp = function() _self:exit() end
-        local handleTap = function(e) _self:handleTap(e) end
+        local handleTap = function(e)
+            -- キーボードからの直接入力だけを扱う
+            local stateID = e:getProperty(hs.eventtap.event.properties['eventSourceStateID'])
+            if stateID ~= 1 then
+                return false
+            end
+            local keyCode = e:getKeyCode()
+            local type = KEY_UP
+            if e:getType() == hs.eventtap.event.types.keyDown then
+                if e:getProperty(hs.eventtap.event.properties['keyboardEventAutorepeat']) == 0 then
+                    type = KEY_DOWN
+                else
+                    type = KEY_REPEAT
+                end
+            end
+            _self:handleTap(e, keyCode, type)
+        end
         _self._trigger = hs.hotkey.bind(_self._triggerMod, _self._triggerKey, 0, hotkeyDown, hotkeyUp, nil)
         _self._tap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp}, handleTap)
     end
 
     return _self
+end
+
+-- stickey mode
+
+local STICKEY_ONCE = 1
+local STICKEY_TOGGLE = 2
+local STICKEY_CHAIN = 3
+
+local CHyperStickeyImpl = {
+    enter = function(self)
+        if self._tap:isEnabled() then
+            self:exitStickey()
+        else
+            -- log.d("Stickey enter")
+            self._stickeyModal:enter()
+            CHyperImpl.enter(self)
+        end
+    end,
+
+    exitStickey = function(self)
+        -- log.d("Stickey exit")
+        CHyperImpl.exit(self)
+        self._stickeyModal:exit()
+    end,
+
+    exit = function(self)
+        -- intercept
+    end,
+
+    chain = function(self)
+        if self.chainTimer == nil then
+            self.chainTimer = hs.timer.delayed.new(self.chainDelay, function() self:fireChainTimer() end)
+        end
+        self.chainTimer:start()
+    end,
+
+    fireChainTimer = function(self)
+        self.chainTimer:stop()
+        self:exitStickey()
+    end,
+
+    handleTap = function(self, e, keyCode, type)
+        if keyCode == 0x35 or keyCode == self._triggerKey then
+            return true
+        end
+        if self.stickeyMode == STICKEY_ONCE then
+             self:exitStickey()
+        elseif self.stickeyMode == STICKEY_CHAIN then
+            self:chain()
+        end
+        return CHyperImpl.handleTap(self, e, keyCode, type)
+    end,
+}
+setmetatable(CHyperStickeyImpl, {__index = CHyperImpl})
+
+CHyperImpl.stickey = function(self, mode, op)
+    if type(mode) == 'string' then
+        local case = {once = STICKEY_ONCE, toggle = STICKEY_TOGGLE, chain = STICKEY_CHAIN}
+        self.stickeyMode = case[mode:lower()]
+    end
+
+    if type(self.stickeyMode) == 'number' then
+        if self._stickeyModal == nil then
+            self._stickeyModal = hs.hotkey.modal.new()
+            self._stickeyModal:bind({}, 0x35, 0, function() self:exitStickey() end, nil, nil)
+        end
+        if self.stickeyMode == STICKEY_CHAIN and type(op) == 'number' then
+            self.chainDelay = op
+        else
+            self.chainDelay = 0.5
+        end
+        setmetatable(self, {__index = CHyperStickeyImpl})
+    else
+        setmetatable(self, {__index = CHyperImpl})
+    end
+
+    return self
 end
 
 return CHyper
