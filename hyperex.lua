@@ -373,6 +373,7 @@ local CHyperImpl = {
                 e:setFlags(flag)
                 if type == KEY_DOWN then
                     self._triggered = true
+                    v:showMessage()
                 end
                 return false
             end
