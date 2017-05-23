@@ -433,27 +433,27 @@ CHyper.new = function(triggerKey)
     return _self
 end
 
--- stickey mode
+-- sticky mode
 
-local STICKEY_ONCE = 1
-local STICKEY_TOGGLE = 2
-local STICKEY_CHAIN = 3
+local STICKY_ONCE = 1
+local STICKY_TOGGLE = 2
+local STICKY_CHAIN = 3
 
-local CHyperStickeyImpl = {
+local CHyperStickyImpl = {
     enter = function(self)
         if self._tap:isEnabled() then
-            self:exitStickey()
+            self:exitSticky()
         else
-            -- log.d("Stickey enter")
-            self._stickeyModal:enter()
+            -- log.d("Sticky enter")
+            self._stickyModal:enter()
             CHyperImpl.enter(self)
         end
     end,
 
-    exitStickey = function(self)
-        -- log.d("Stickey exit")
+    exitSticky = function(self)
+        -- log.d("Sticky exit")
         CHyperImpl.exit(self)
-        self._stickeyModal:exit()
+        self._stickyModal:exit()
     end,
 
     exit = function(self)
@@ -469,40 +469,40 @@ local CHyperStickeyImpl = {
 
     fireChainTimer = function(self)
         self.chainTimer:stop()
-        self:exitStickey()
+        self:exitSticky()
     end,
 
     handleTap = function(self, e, keyCode, type)
         if keyCode == 0x35 or keyCode == self._triggerKey then
             return true
         end
-        if self.stickeyMode == STICKEY_ONCE then
-             self:exitStickey()
-        elseif self.stickeyMode == STICKEY_CHAIN then
+        if self.stickyMode == STICKY_ONCE then
+             self:exitSticky()
+        elseif self.stickyMode == STICKY_CHAIN then
             self:chain()
         end
         return CHyperImpl.handleTap(self, e, keyCode, type)
     end,
 }
-setmetatable(CHyperStickeyImpl, {__index = CHyperImpl})
+setmetatable(CHyperStickyImpl, {__index = CHyperImpl})
 
-CHyperImpl.stickey = function(self, mode, op)
+CHyperImpl.sticky = function(self, mode, op)
     if type(mode) == 'string' then
-        local case = {once = STICKEY_ONCE, toggle = STICKEY_TOGGLE, chain = STICKEY_CHAIN}
-        self.stickeyMode = case[mode:lower()]
+        local case = {once = STICKY_ONCE, toggle = STICKY_TOGGLE, chain = STICKY_CHAIN}
+        self.stickyMode = case[mode:lower()]
     end
 
-    if type(self.stickeyMode) == 'number' then
-        if self._stickeyModal == nil then
-            self._stickeyModal = hs.hotkey.modal.new()
-            self._stickeyModal:bind({}, 0x35, 0, function() self:exitStickey() end, nil, nil)
+    if type(self.stickyMode) == 'number' then
+        if self._stickyModal == nil then
+            self._stickyModal = hs.hotkey.modal.new()
+            self._stickyModal:bind({}, 0x35, 0, function() self:exitSticky() end, nil, nil)
         end
-        if self.stickeyMode == STICKEY_CHAIN and type(op) == 'number' then
+        if self.stickyMode == STICKY_CHAIN and type(op) == 'number' then
             self.chainDelay = op
         else
             self.chainDelay = 0.5
         end
-        setmetatable(self, {__index = CHyperStickeyImpl})
+        setmetatable(self, {__index = CHyperStickyImpl})
     else
         setmetatable(self, {__index = CHyperImpl})
     end
