@@ -1,7 +1,7 @@
 
 # hyperex
 
-hyperex is Hammerspoon script which provides yet another modifier key. With simplicity, adaptability, diversity.
+hyperex is [Hammerspoon](http://www.hammerspoon.org/) script which provides yet another modifier key. With simplicity, adaptability, diversity.
 
 ## Release Note
 0.2 - added [Sticky mode](#sticky-mode)
