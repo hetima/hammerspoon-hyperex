@@ -125,15 +125,16 @@ local CModifierImpl = {
         end
     end,
 
-    to = function(self, keys)
-        if type(keys) == 'string' then
-            if keys == 'any' or keys == 'all' then
+    to = function(self, ...)
+        local keys = {...}
+        local first = keys[1]
+        if type(first) == 'string' then
+            if first == 'any' or first == 'all' then
                 self._anyTarget = true
                 return self
             end
-            keys = {keys}
-        elseif type(keys) == 'number' then
-            keys = {keys}
+        elseif type(first) == 'table' then
+            keys = first
         end
         local keyNumbers = {}
         for i, v in pairs(keys) do
