@@ -143,6 +143,11 @@ local CModifierImpl = {
                     'n','o','p','q','r','s','t','u','v','w','x','y','z'}
             elseif v == 'fkeys' then
                 specials = {'f1','f2','f3','f4','f5','f6','f7','f8','f9','f10','f11','f12','f13','f14','f15'}
+            elseif v == 'num' then
+                specials = {'1','2','3','4','5','6','7','8','9','0'}
+            elseif v == 'pads' then
+                specials = {'pad*', 'pad+', 'pad/', 'pad-', 'pad=', 'padclear', 'padenter',
+                    'pad0', 'pad1', 'pad2', 'pad3', 'pad4', 'pad5', 'pad6', 'pad7', 'pad8', 'pad9'}
             else
                 v = realKeyCode(v)
                 if type(v) == 'number' then

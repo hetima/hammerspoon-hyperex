@@ -54,6 +54,10 @@ hx:mod({'ctrl', 'shift'}):to('any')
 hx:mod({'ctrl', 'shift'}):to('atoz')
 -- hyper + f1~f15 -> ctrl + shift + f1~f15
 hx:mod({'ctrl', 'shift'}):to('fkeys')
+-- hyper + 0~9 -> 0~9
+hx:mod({}):to('num')
+-- hyper + keypad(pad0~9, pad+, pad-, etc...) -> keypad
+hx:mod({}):to('pads')
 ```
 
 ## InitialKey and EmptyHitKey
