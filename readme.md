@@ -73,6 +73,10 @@ EmptyHitKey is triggered when hyper-key is released if any setting was not trigg
 ```lua
 hx:setInitialKey(0x66) --eisu
 hx:setEmptyHitKey(0x68) --kana
+
+-- or function is also supported
+hx:setInitialFunc(function ... end)
+hx:setEmptyHitFunc(function ... end)
 ```
 
 ## message
