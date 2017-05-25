@@ -2,7 +2,7 @@
 --  hyperex.lua
 -- https://github.com/hetima/hammerspoon-hyperex
 
-local HYPEREX_VERSION = '0.2.1'
+local HYPEREX_VERSION = '0.3'
 
 local log = hs.logger.new('hyperex', 'debug')
 

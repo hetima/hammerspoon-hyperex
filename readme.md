@@ -5,6 +5,9 @@ hyperex is [Hammerspoon](http://www.hammerspoon.org/) script which provides yet 
 
 ## Release Note
 
+### 0.3
+- Can be attached to modifier key now
+
 ### 0.2.1
  - [Setting priority was reversed](https://github.com/hetima/hammerspoon-hyperex/commit/3d9963d40d5dc51e7061eea8788d0b424d5fe5c9). Early settings takes precedence. You may need to repair init.lua.   
 - added idiom `'num'` and `'pads'` for `mod():to()`
@@ -23,6 +26,14 @@ local hyperex = require('hyperex')
 local hx = hyperex.new('f18') -- f18 becomes hyper-key
 ```
 
+hyperex can attach behavior to modifier key. It can be set individual instance on the left and right.
+
+```lua
+local leftCmd = hyperex.new('cmd') -- define generic label as left
+local rightCmd = hyperex.new('rightcmd')
+```
+
+
 ## adding shortcut and function
 
 This setting acts like hotkey during press hyper-key.
@@ -40,6 +51,8 @@ hx:bind(']'):to('8', {'shift'})
 hx:bind('z'):to(function() hs.eventtap.keyStroke({}, 'h') end)
 
 ```
+
+If attached to modifier key, source modifier is **not merged**.
 
 
 ## adding modifiers
@@ -65,6 +78,8 @@ hx:mod({}):to('num')
 -- hyper + keypad(pad0~9, pad+, pad-, etc...) -> keypad
 hx:mod({}):to('pads')
 ```
+
+If attached to modifier key, source modifier is **merged**.
 
 ## InitialKey and EmptyHitKey
 InitialKey is triggered immediately when hyper-key is pressed.  
@@ -106,6 +121,8 @@ hx:sticky('once')
 hx:sticky('toggle')
 hx:sticky('chain', 0.4) -- pass effective duration as secs
 ```
+
+If attached to modifier key, sticky mode is disabled.
 
 ## Other
 
@@ -155,7 +172,13 @@ Method chain
 |CModifier|:to()|self|
 |*        |:withMessage()|self|
 
+## Example
 
+Make left cmd to EISU and right cmd to KANA when type alone.
+```lua
+local hxLCmd = hyperex.new('cmd'):setEmptyHitKey(0x66)
+local hxRCmd = hyperex.new('rightcmd'):setEmptyHitKey(0x68)
+```
 
 ## License
 
