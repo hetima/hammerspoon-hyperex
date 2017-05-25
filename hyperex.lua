@@ -60,6 +60,7 @@ local function parseKey(a1, a2)
             end)
             return mods, realKeyCode(key)
         end
+        return {}, nil
     end
 
     if a2 == nil then return parseSingle(a1) end
@@ -240,6 +241,7 @@ CBinder.new = function(hyperInstance)
         toFunc = nil,
         message = nil,
         alertDuration = 0.4,
+        _parasited = false,
     }
 
     setmetatable(_self, {__index = CBinderImpl})
@@ -397,6 +399,11 @@ local CHyperImpl = {
             end
         end
 
+        -- parasite
+        if self._parasited and type == KEY_DOWN then
+            self._triggered = true
+        end
+
         return false
     end,
 
@@ -425,31 +432,108 @@ CHyper.new = function(triggerKey)
 
     _self._triggerMod, _self._triggerKey = parseKey(triggerKey)
     if _self._triggerKey ~= nil then
-        local hotkeyDown = function() _self:enter() end
-        local hotkeyUp = function() _self:exit() end
-        local handleTap = function(e)
-            -- キーボードからの直接入力だけを扱う
-            local stateID = e:getProperty(hs.eventtap.event.properties['eventSourceStateID'])
-            if stateID ~= 1 then
-                return false
-            end
-            local keyCode = e:getKeyCode()
-            local type = KEY_UP
-            if e:getType() == hs.eventtap.event.types.keyDown then
-                if e:getProperty(hs.eventtap.event.properties['keyboardEventAutorepeat']) == 0 then
-                    type = KEY_DOWN
-                else
-                    type = KEY_REPEAT
-                end
-            end
-            _self:handleTap(e, keyCode, type)
+        if CHyperParasites.realFlagMask[_self._triggerKey] ~= nil then
+            _self:parasitize(_self._triggerKey)
+        else
+            local hotkeyDown = function() _self:enter() end
+            local hotkeyUp = function() _self:exit() end
+            _self._trigger = hs.hotkey.bind(_self._triggerMod, _self._triggerKey, 0, hotkeyDown, hotkeyUp, nil)
         end
-        _self._trigger = hs.hotkey.bind(_self._triggerMod, _self._triggerKey, 0, hotkeyDown, hotkeyUp, nil)
-        _self._tap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp}, handleTap)
     end
+
+    local handleTap = function(e)
+        -- キーボードからの直接入力だけを扱う
+        local stateID = e:getProperty(hs.eventtap.event.properties['eventSourceStateID'])
+        if stateID ~= 1 then
+            return false
+        end
+        local keyCode = e:getKeyCode()
+        local type = KEY_UP
+        if e:getType() == hs.eventtap.event.types.keyDown then
+            if e:getProperty(hs.eventtap.event.properties['keyboardEventAutorepeat']) == 0 then
+                type = KEY_DOWN
+            else
+                type = KEY_REPEAT
+            end
+        end
+        _self:handleTap(e, keyCode, type)
+    end
+    _self._tap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp}, handleTap)
 
     return _self
 end
+
+-- Parasite modifier mode
+
+CHyperParasites = {
+    possibleKeys = {
+        lcmd = 0x37, rcmd = 0x36,
+        lalt = 0x3a, ralt = 0x3d,
+        lctrl = 0x3b, rctrl = 0x3e,
+        lshift = 0x38, rshift = 0x3c,
+    },
+    realFlagMask = {
+        [0x37] = 8, -- lcmd  0000 1000
+        [0x36] = 16, -- rcmd 0001 0000
+        [0x3a] = 32, -- lalt 0010 0000
+        [0x3d] = 64, -- ralt 0100 0000
+        [0x3b] = 1, -- lctrl 0000 0001
+        [0x3e] = 8192, -- rctrl 10 0000 0000 0000
+        [0x38] = 2, -- lshift 0000 0010
+        [0x3c] = 4, -- rshift 0000 0100
+    },
+    _parasites = {},
+    _tap = nil,
+}
+
+CHyperParasites._handleTap = function(e)
+    local keyCode = e:getKeyCode()
+    local hyper = CHyperParasites._parasites[keyCode]
+    if hyper == nil then
+        return false
+    end
+    local realFlags = e:getRawEventData().CGEventData.flags
+    local mask = CHyperParasites.realFlagMask[keyCode]
+    if mask == nil then
+        return false
+    end
+    if (realFlags & mask) == mask then
+        -- log.d(keyCode, 'press', (realFlags))
+        hyper:enter()
+    else
+        -- log.d(keyCode, 'release', (realFlags))
+        hyper:exit()
+    end
+
+    return false
+end
+
+CHyperImpl.parasitize = function(self, modifier)
+    if type(modifier) == 'string' then
+        modifier = CHyperParasites.possibleKeys[modifier]
+    end
+    if CHyperParasites.realFlagMask[modifier] == nil then
+        return self
+    end
+    local keyCode = modifier
+    
+    if CHyperParasites._parasites[keyCode] then
+        return self
+    end
+    if CHyperParasites._tap == nil then
+         CHyperParasites._tap = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, CHyperParasites._handleTap)
+         CHyperParasites._tap:start()
+    end
+    CHyperParasites._parasites[keyCode] = self
+    
+    self._parasited = true
+    self.sticky = function(self)
+        log.d('parasite can not become sticky')
+        return self
+    end
+    return self
+end
+
 
 -- sticky mode
 
