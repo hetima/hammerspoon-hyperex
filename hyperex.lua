@@ -487,6 +487,10 @@ CHyperParasites = {
 }
 
 CHyperParasites._handleTap = function(e)
+    local stateID = e:getProperty(hs.eventtap.event.properties['eventSourceStateID'])
+    if stateID ~= 1 then
+        return false
+    end
     local keyCode = e:getKeyCode()
     local hyper = CHyperParasites._parasites[keyCode]
     if hyper == nil then
