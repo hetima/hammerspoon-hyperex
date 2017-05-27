@@ -126,6 +126,9 @@ If attached to modifier key, sticky mode is disabled.
 
 ## Other
 
+"Secure Keyboard Entry" option of Terminal.app avoids input monitoring. This option interferes with the operation of hyperex.
+
+
 hyperex can be used multiple instances.
 
 ```lua
