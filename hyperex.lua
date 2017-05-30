@@ -14,9 +14,9 @@ CHyper = {
     version = HYPEREX_VERSION,
     alertStyle = {
         strokeWidth  = 4,
-        strokeColor = { white = 0.85, alpha = 0.9 },
+        strokeColor = { white = 1, alpha = 0.95 },
         fillColor   = { white = 0, alpha = 0.75 },
-        textColor = { white = 0.85, alpha = 0.9 },
+        textColor = { white = 1, alpha = 0.95 },
         textFont  = ".AppleSystemUIFont",
         textSize  = 23,
         radius = 9,
