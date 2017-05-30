@@ -10,7 +10,24 @@ local KEY_DOWN = 1
 local KEY_REPEAT = 2
 local KEY_UP = 3
 
-CHyper = {}
+CHyper = {
+    alertStyle = {
+        strokeWidth  = 4,
+        strokeColor = { white = 0.85, alpha = 0.9 },
+        fillColor   = { white = 0, alpha = 0.75 },
+        textColor = { white = 0.85, alpha = 0.9 },
+        textFont  = ".AppleSystemUIFont",
+        textSize  = 23,
+        radius = 9,
+    },
+
+    showMessage = function(message, duration)
+        if type(message) == 'string' then 
+            return hs.alert.show(message, CHyper.alertStyle, hs.screen.mainScreen(), duration)
+        end
+    end,
+
+}
 
 CHyper.version = function()
     return HYPEREX_VERSION
@@ -123,7 +140,7 @@ local CModifierImpl = {
 
     showMessage = function(self)
         if type(self.message) == 'string' then 
-            hs.alert(self.message, self.alertDuration or 0)
+            CHyper.showMessage(self.message, self.alertDuration or 0)
         end
     end,
 
@@ -206,7 +223,7 @@ local CBinderImpl = {
 
     showMessage = function(self)
         if type(self.message) == 'string' then 
-            hs.alert(self.message, self.alertDuration or 0)
+            CHyper.showMessage(self.message, self.alertDuration or 0)
         end
     end,
 
@@ -325,7 +342,7 @@ local CHyperImpl = {
             return
         end
         if type(self.message) == 'string' then 
-            hs.alert(self.message, self.alertDuration or 0)
+            CHyper.showMessage(self.message, self.alertDuration or 0)
         end
         self._tap:start()
         if self._initialHitFunc then
@@ -340,7 +357,7 @@ local CHyperImpl = {
             return
         end
         if type(self.leaveMessage) == 'string' then 
-            hs.alert(self.leaveMessage, self.alertDuration or 0)
+            CHyper.showMessage(self.leaveMessage, self.alertDuration or 0)
         end
         self._tap:stop()
         -- stop した後に呼ばないとキーイベントが発生しない
