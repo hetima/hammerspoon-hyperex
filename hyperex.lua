@@ -11,6 +11,7 @@ local KEY_REPEAT = 2
 local KEY_UP = 3
 
 CHyper = {
+    version = HYPEREX_VERSION,
     alertStyle = {
         strokeWidth  = 4,
         strokeColor = { white = 0.85, alpha = 0.9 },
@@ -29,9 +30,6 @@ CHyper = {
 
 }
 
-CHyper.version = function()
-    return HYPEREX_VERSION
-end
 
 -- 比較の手間を省くためにあらかじめ数値にしておく
 local function realKeyCode(v)
