@@ -482,10 +482,10 @@ end
 
 CHyperParasites = {
     possibleKeys = {
-        lcmd = 0x37, rcmd = 0x36,
-        lalt = 0x3a, ralt = 0x3d,
-        lctrl = 0x3b, rctrl = 0x3e,
-        lshift = 0x38, rshift = 0x3c,
+        leftcmd = 0x37, rightcmd = 0x36,
+        leftalt = 0x3a, rightalt = 0x3d,
+        leftctrl = 0x3b, rightctrl = 0x3e,
+        leftshift = 0x38, rightshift = 0x3c,
     },
     realFlagMask = {
         [0x37] = 8, -- lcmd  0000 1000
