@@ -471,7 +471,7 @@ CHyper.new = function(triggerKey)
                 type = KEY_REPEAT
             end
         end
-        _self:handleTap(e, keyCode, type)
+        return _self:handleTap(e, keyCode, type)
     end
     _self._tap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp}, handleTap)
 
