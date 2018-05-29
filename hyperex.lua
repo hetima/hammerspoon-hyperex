@@ -508,23 +508,29 @@ CHyperParasites._handleTap = function(e)
     end
     local keyCode = e:getKeyCode()
     local hyper = CHyperParasites._parasites[keyCode]
-    if hyper == nil then
-        return false
-    end
-    local realFlags = e:getRawEventData().CGEventData.flags
-    local mask = CHyperParasites.realFlagMask[keyCode]
-    if mask == nil then
-        return false
-    end
-    if (realFlags & mask) == mask then
-        -- log.d(keyCode, 'press', (realFlags))
-        hyper:enter()
-    else
-        -- log.d(keyCode, 'release', (realFlags))
-        hyper:exit()
+    if hyper ~= nil then
+        local realFlags = e:getRawEventData().CGEventData.flags
+        local mask = CHyperParasites.realFlagMask[keyCode]
+        if mask == nil then
+            return false
+        end
+        if (realFlags & mask) == mask then
+            -- log.d(keyCode, 'press', (realFlags))
+            hyper:enter()
+        else
+            -- log.d(keyCode, 'release', (realFlags))
+            hyper:exit()
+        end
     end
 
     return false
+end
+
+CHyperParasites.startTap = function()
+    if CHyperParasites._tap == nil then
+         CHyperParasites._tap = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, CHyperParasites._handleTap)
+         CHyperParasites._tap:start()
+    end
 end
 
 CHyperImpl.parasitize = function(self, modifier)
@@ -539,10 +545,7 @@ CHyperImpl.parasitize = function(self, modifier)
     if CHyperParasites._parasites[keyCode] then
         return self
     end
-    if CHyperParasites._tap == nil then
-         CHyperParasites._tap = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, CHyperParasites._handleTap)
-         CHyperParasites._tap:start()
-    end
+    CHyperParasites.startTap()
     CHyperParasites._parasites[keyCode] = self
     
     self._parasited = true
